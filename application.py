@@ -9,6 +9,8 @@ import unicodedata
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 import nltk
+import torch
+from transformers import BertTokenizer, BertForSequenceClassification
 
 # Descargar recursos de NLTK
 nltk.download('wordnet')
@@ -124,6 +126,20 @@ def process_input_sentence(input_sentence):
     #print(padded_sentence)
     return padded_sentence
 
+def predict_with_bert(sentence):
+    """Realiza la predicción usando el modelo BERT."""
+    sentence = process_tweet_content(sentence)
+    sentence = remove_specific_words(sentence)
+    inputs = tokenizer_bert(sentence, return_tensors="pt", padding=True, truncation=True, max_length=128)
+
+    with torch.no_grad():
+        outputs = model_bert(**inputs)
+        logits = outputs.logits
+
+    predicted_class = torch.argmax(logits, dim=1).item()
+    probability = torch.softmax(logits, dim=1)[0][predicted_class].item()
+    return "REAL" if predicted_class == 1 else "FAKE", probability
+
 # Configuración inicial de Streamlit
 st.markdown(
     """
@@ -142,8 +158,10 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-# Cargar modelo LSTM y datos necesarios
-model_lstm = tf.keras.models.load_model('model_LSTM23_Final.h5')
+# Cargar el modelo y el tokenizador BERT
+model_bert = BertForSequenceClassification.from_pretrained('huawei-noah/TinyBERT_General_4L_312D', num_labels=2)
+model_bert.load_state_dict(torch.load('bert_finetuned_model3.pth'))
+tokenizer_bert = BertTokenizer.from_pretrained('huawei-noah/TinyBERT_General_4L_312D')
 train_dataset = pd.read_csv("train.csv", encoding="latin-1")
 stop_words_list = stopwords.words('english')
 lemmatizer = WordNetLemmatizer()
@@ -168,22 +186,21 @@ vocabulary_size = len(tweet_tokenizer.word_index) + 1
 max_length = 23
 
 
-
+#user_input = "Cop injured in gunfight as militants attack Udhampur police post: Suspected militants attacked a police post i..."
 
 # Entrada de texto
-user_input = st.text_input(
-    "Enter the text of the tweet:", 
-    placeholder="Type the tweet text here..."
-)
+user_input = st.text_input(    "Enter the text of the tweet:", placeholder="Type the tweet text here...")
+#prediction_label, probability = predict_with_bert(user_input)
+#print(prediction_label)
+#print(probability)
 
 # Botón para predecir
 if st.button("Predict"):
     if user_input:
         # Procesar el texto y predecir
-        processed_text = process_input_sentence(user_input)
-        prediction = model_lstm.predict(processed_text)
-        prediction_label = "REAL" if prediction >= 0.6 else "FAKE"
-        probability = prediction[0][0] if prediction >= 0.6 else 1 - prediction[0][0]
+        prediction_label, probability = predict_with_bert(user_input)
+        #prediction_label = "REAL" if prediction >= 0.6 else "FAKE"
+        #probability = prediction[0][0] if prediction >= 0.6 else 1 - prediction[0][0]
 
         # Mostrar resultado en un recuadro estilizado
         st.markdown(
