@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import tensorflow as tf
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.preprocessing.text import Tokenizer
 import re
@@ -185,13 +186,13 @@ vocabulary_size = len(tweet_tokenizer.word_index) + 1
 max_length = 23
 
 
-user_input = "Cop injured in gunfight as militants attack Udhampur police post: Suspected militants attacked a police post i..."
+#user_input = "Cop injured in gunfight as militants attack Udhampur police post: Suspected militants attacked a police post i..."
 
 # Entrada de texto
-#user_input = st.text_input(    "Enter the text of the tweet:", placeholder="Type the tweet text here...")
-prediction_label, probability = predict_with_bert(user_input)
-print(prediction_label)
-print(probability)
+user_input = st.text_input(    "Enter the text of the tweet:", placeholder="Type the tweet text here...")
+#prediction_label, probability = predict_with_bert(user_input)
+#print(prediction_label)
+#print(probability)
 
 # Botón para predecir
 if st.button("Predict"):
