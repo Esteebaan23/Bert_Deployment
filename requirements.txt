@@ -1,0 +1,9 @@
+pandas
+pydantic
+uvicorn
+python-multipart
+starlette
+tensorflow
+nltk
+torch
+transformers
